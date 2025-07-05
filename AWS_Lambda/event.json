@@ -1,0 +1,47 @@
+{
+  "resource": "/meurecurso",
+  "path": "/meurecurso",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "multiValueHeaders": {
+    "Content-Type": [
+      "application/json"
+    ]
+  },
+  "queryStringParameters": {
+    "param1": "valor1"
+  },
+  "multiValueQueryStringParameters": {
+    "param1": [
+      "valor1"
+    ]
+  },
+  "pathParameters": {
+    "id": "123"
+  },
+  "stageVariables": null,
+  "requestContext": {
+    "resourceId": "abc123",
+    "resourcePath": "/meurecurso",
+    "httpMethod": "POST",
+    "extendedRequestId": "XYZ123",
+    "requestTime": "05/Jul/2025:12:34:56 +0000",
+    "path": "/prod/meurecurso",
+    "accountId": "123456789012",
+    "protocol": "HTTP/1.1",
+    "stage": "prod",
+    "domainPrefix": "minhaapi",
+    "requestTimeEpoch": 1720180496000,
+    "requestId": "cdefg-hijk-lmno",
+    "identity": {
+      "sourceIp": "189.45.67.89",
+      "userAgent": "PostmanRuntime/7.32.0"
+    },
+    "domainName": "minhaapi.execute-api.us-east-1.amazonaws.com",
+    "apiId": "abcde12345"
+  },
+  "body": "{ \"token\": \"7ePLKmMIAtsZ441FtMefW01b5AUJYybPlQgB1uevC9juLEwVt51ubY0GsdgQHJ7m\", \"measurement\": 30 }",
+  "isBase64Encoded": false
+}
