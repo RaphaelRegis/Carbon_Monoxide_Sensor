@@ -18,10 +18,11 @@ def collect_request_body(event):
 def verify_token(token):
     return token == VALIDY_TOKEN
 
-def save_data(measurement, dateTime, region, city):
+def save_data(measurement, date, hour, region, city):
     item = {
         'measurement': measurement,
-        'dateTime': dateTime,
+        'date': date,
+        'hour': hour,
         'region': region,
         'city': city
     }
@@ -32,7 +33,7 @@ def save_data(measurement, dateTime, region, city):
 
 def lambda_handler(event, context):
     # get request data
-    token, measurement, dateTime, region, city = collect_request_body(event)
+    token, measurement, date, hour, region, city = collect_request_body(event)
 
     # verify request credential
     validity = verify_token(token)
@@ -44,7 +45,7 @@ def lambda_handler(event, context):
         }
     
     # save in DynamoDB
-    item = save_data(measurement, dateTime, region, city)
+    item = save_data(measurement, date, hour, region, city)
     
     return {
         'statusCode': 201,
