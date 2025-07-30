@@ -13,8 +13,7 @@ SQS_URL = os.getenv("SQS_URL")
 #table = dynamodb.Table(TABLE_NAME)
 
 #load boto3 sqs utils
-#sqs = boto3.resources("sqs")
-#queue = sqs.Queue(url=SQS_URL)
+#sqs = boto3.client("sqs")
 
 def get_query_criteria(event):
     ...
@@ -47,11 +46,41 @@ def create_new_message(new_average_measurement, recomendation):
     return new_message
 
 def get_pending_notifications():
-    ...
+    pending_notifications = []
+    response = sqs.receive_message(
+        QueueUrl=SQS_URL,
+        MaxNumberOfMessages=10,
+        WaitTimeSeconds=0
+    )
+
+    if 'Messages' in response:
+        return response['Messages']
+    else:
+        return pending_notifications
 
 def send_message(message):
     ...
 
+def handle_old_messages(old_messages):
+    for i in range(old_messages):
+        result = send_message(old_messages[i])
+
+        # apaga a mensagem do sqs se ela tiver sido enviada corretamente
+        if result == True:
+            sqs.delete_message(
+                QueueUrl=SQS_URL,
+                ReceiptHandle=msg['ReceiptHandle']
+            )
+
+def handle_new_message(new_message):
+    result = send_message(new_message)
+
+    # se nao tiver sucesso, manda a mensagem pro sqs
+    if result == False:
+        sqs.send_message(
+            QueueUrl = SQS_URL,
+            MessageBody = new_message
+        )
 
 def lambda_handler(event, context):
     # get query criteria
@@ -65,24 +94,20 @@ def lambda_handler(event, context):
     recomendation = get_recomendation(new_average_measurement)
     new_message = create_new_message(new_average_measurement, recomendation)
 
-    # verificar se ha mensagens no sqs
-    # ele vai pegar uma lista com as mensagens pendentes e vai adicionar a nova no final dela
-    messages: list = get_pending_notifications()
-    messages.append(new_message)
+    # ele vai pegar uma lista com as mensagens pendentes
+    old_messages: list = get_pending_notifications()
 
-    for i in range(messages):
-        result = send_message(messages[i])
-
-        if result == True:
-            ...
-
-
-
-    # enviar mensagens
-    # ele vai iterar enviando as mensagens pendentes. Conforme ele vai enviando, ele vai tirando da lista
-    # caso alguma mensagem não seja enviada, ele manda pro SQS.
+    # vai tentar enviar as mensagens pendentes e excluí-las de acordo
+    handle_old_messages(old_messages)
     
-
+    # tenta enviar a mensagem atual
+    handle_new_message(new_message)
+    
+    return {
+        'statusCode': 200,
+        'message': new_message
+    }
+    
 # para realizar testes localmente
 if __name__ == "__main__":
     with open("AWS_Lambda\\notify_telegram\\event.json") as f:
