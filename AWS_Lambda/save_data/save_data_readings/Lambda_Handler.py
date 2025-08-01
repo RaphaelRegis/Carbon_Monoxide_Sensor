@@ -1,6 +1,7 @@
 import json
 from dotenv import load_dotenv
 import os
+import boto3
 
 # load environment variables
 load_dotenv()
@@ -8,8 +9,8 @@ VALIDY_TOKEN = os.getenv("VALIDY_TOKEN")
 TABLE_NAME = os.getenv("TABLE_NAME")
 
 # load boto3 dynamodb table
-#dynamodb = boto3.resource("dynamodb")
-#table = dynamodb.Table(TABLE_NAME)
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table(TABLE_NAME)
 
 def collect_request_body(event):
     body = json.loads(event['body'])
@@ -27,9 +28,8 @@ def save_data(measurement, date, hour, region, city):
         'city': city
     }
 
+    table.put_item(item)
     return item
-
-    #table.put_item(item)
 
 def lambda_handler(event, context):
     # get request data
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
 
 # para realizar testes localmente
 if __name__ == "__main__":
-    with open("AWS_Lambda\\save_data\\event.json") as f:
+    with open("AWS_Lambda\\save_data\\save_data_readings\\event.json") as f:
         event = json.load(f)    
     
     print(lambda_handler(event, None))
