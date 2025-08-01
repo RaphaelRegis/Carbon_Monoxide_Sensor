@@ -1,9 +1,16 @@
 # Carbon_Monoxide_Sensor
 
-1. os sensores enviam os dados para o API Gateway a cada 1 hora;
-2. os dados passam por uma função Lambda e são salvos no Amazon DynamoDB;
-3. em horários definidos, uma outra função Lambda pega todos os valores da última hora e tira uma média.
-3.1 ela então verifica se há alguma mensagem não enviada no SQS.
-3.2 caso tenha, ele tenta enviar. Caso contrário, ela volta pro SQS.
-3.3 o mesmo é feito com a nova média.
-4. todo mês, uma nova função lambda deve fazer uma análise do comportamento do ar ao longo do mês.
+FLUXO
+
+I. SENSORES:
+    - Os sensores enviam as leituras para uma API a cada 2 horas;
+    - Essa API chama uma função Lambda;
+    - Essa função Lambda salva os dados numa tabela do DynamoDB; (ok)
+
+II. A CADA 2 HORAS:
+    - A cada 2 horas, uma função pega os dados salvos, faz uma média e salva numa outra tabela do DynamoDB; (ok)
+    - Toda vez que essa tabela recebe um novo dado, outra função Lambda é chamada;
+    - Essa função fará o trabalho de notificar o Telegram com as recomendações; (ok)
+
+III. TODO DIA ÀS 18:00 HORAS:
+    - Uma outra função será chamada para imprimir a variação da qualidade do ar ao longo do dia
