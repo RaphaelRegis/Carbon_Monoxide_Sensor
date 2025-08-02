@@ -42,6 +42,6 @@
     "domainName": "minhaapi.execute-api.us-east-1.amazonaws.com",
     "apiId": "abcde12345"
   },
-  "body": "{ \"token\": \"7ePLKmMIAtsZ441FtMefW01b5AUJYybPlQgB1uevC9juLEwVt51ubY0GsdgQHJ7m\", \"measurement\": 30, \"dateTime\": 1, \"region\": \"Centro\", \"city\": \"Vitoria da Conquista - BA\" }",
+  "body": "{ \"token\": \"7ePLKmMIAtsZ441FtMefW01b5AUJYybPlQgB1uevC9juLEwVt51ubY0GsdgQHJ7m\", \"measurement\": 30, \"region\": \"Centro\", \"city\": \"Vitoria da Conquista - BA\" }",
   "isBase64Encoded": false
 }

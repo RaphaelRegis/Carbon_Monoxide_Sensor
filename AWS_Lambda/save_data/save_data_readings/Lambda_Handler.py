@@ -1,7 +1,7 @@
 import json
 from dotenv import load_dotenv
 import os
-import boto3
+##import boto3
 
 # load environment variables
 load_dotenv()
@@ -9,12 +9,35 @@ VALIDY_TOKEN = os.getenv("VALIDY_TOKEN")
 TABLE_NAME = os.getenv("TABLE_NAME")
 
 # load boto3 dynamodb table
-dynamodb = boto3.resource("dynamodb")
-table = dynamodb.Table(TABLE_NAME)
+##dynamodb = boto3.resource("dynamodb")
+##table = dynamodb.Table(TABLE_NAME)
+
+def convert_date(requestTime: str):
+    months = {
+        "Jan": "01",
+        "Feb": "02",
+        "Mar": "03",
+        "Apr": "04",
+        "May": "05",
+        "Jun": "06",
+        "Jul": "07",
+        "Aug": "08",
+        "Sep": "09",
+        "Oct": "10",
+        "Nov": "11",
+        "Dec": "12"
+    }
+
+    date = f"{requestTime[7:11]}-{months[requestTime[3:6]]}-{requestTime[0:2]}"
+    hour = requestTime[12:14]
+
+    return date, hour
 
 def collect_request_body(event):
     body = json.loads(event['body'])
-    return body['token'], body['measurement'], body['dateTime'], body['region'], body['city']
+    date, hour = convert_date(event['requestContext']['requestTime'])
+
+    return body['token'], body['measurement'], date, hour, body['region'], body['city']
 
 def verify_token(token):
     return token == VALIDY_TOKEN
@@ -28,7 +51,7 @@ def save_data(measurement, date, hour, region, city):
         'city': city
     }
 
-    table.put_item(item)
+    ##table.put_item(item)
     return item
 
 def lambda_handler(event, context):
