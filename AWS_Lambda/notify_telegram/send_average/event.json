@@ -12,11 +12,11 @@
           "id": { "S": "123" }
         },
         "NewImage": {
-          "id": { "S": "123" },
-          "nome": { "S": "João Silva" },
-          "email": { "S": "joao@example.com" },
-          "idade": { "N": "30" },
-          "ativo": { "BOOL": true }
+          "measurement": { "S": "10" },
+          "date": { "S": "2025-08-01" },
+          "hour": { "S": "14" },
+          "region": { "S": "southeast" },
+          "city": { "S": "Sao Paulo - SP" }
         },
         "SequenceNumber": "111",
         "SizeBytes": 123,
