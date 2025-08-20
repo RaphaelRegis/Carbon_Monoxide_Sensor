@@ -63,7 +63,7 @@ def create_event(region: str):
         pass
 
     payload = {
-
+        "region": region
     }
 
     events_client.put_targets(
@@ -99,7 +99,8 @@ def lambda_handler(event, context):
     item = {
         "region": region,
         "telegram_token": telegram_token,
-        "telegram_channel": telegram_channel
+        "telegram_channel": telegram_channel,
+        "sqs_queue_url": queue_url
     }
 
     save_new_region(item)
