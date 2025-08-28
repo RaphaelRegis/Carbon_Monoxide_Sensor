@@ -81,6 +81,9 @@ def handle_new_message(sqs_url: str):
 
 
     # em caso de falha, envia ela pro sqs
+
+
+    # usa excessao para notificar
     ...
 
 
