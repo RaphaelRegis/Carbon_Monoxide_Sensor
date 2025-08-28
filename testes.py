@@ -1,38 +1,47 @@
+from dotenv import load_dotenv
+import os
+import requests
 import json
 
-def convert_date(requestTime: str):
-    months = {
-        "Jan": "01",
-        "Feb": "02",
-        "Mar": "03",
-        "Apr": "04",
-        "May": "05",
-        "Jun": "06",
-        "Jul": "07",
-        "Aug": "08",
-        "Sep": "09",
-        "Oct": "10",
-        "Nov": "11",
-        "Dec": "12"
-    }
+# variaveis de ambiente
+load_dotenv()
 
-    date = f"{requestTime[7:11]}-{months[requestTime[3:6]]}-{requestTime[0:2]}"
-    hour = requestTime[12:14]
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_ID = os.getenv("CHANNEL_ID")
 
-    return date, hour
-    ...
+mensagem = "Deus abençoe"
 
+url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
+payload = {
+    "chat_id": CHANNEL_ID,
+    "text": mensagem
+}
 
+resposta = requests.post(url=url, data=payload)
+
+if resposta.status_code == 200:
+    print("Mensagem enviada com sucesso!")
+else:
+    print(f"Falha ao enviar a mensagem: {resposta.text}")
+    
 def lambda_handler(event, context):
-    date, hour = convert_date(event['requestContext']['requestTime'])
-
-
-    return f"{date} | {hour}"
-
+    # coleta a regiao e a medida de CO
+    
+    # busca os dados necessarios
+    
+    # lida com mensagens nao enviadas
+    
+    # tenta enviar a nova mensagem 
+    
+    return {
+        "statusCode": 200,
+        "message": json.dumps()
+    }
+    pass
 
 if __name__ == "__main__":
-    with open("AWS_Lambda\\save_data\\save_data_readings\\event.json") as f:
-        event = json.load(f)    
-    
+    with open("AWS_Lambda\\save_data\\save_data_average\\event.json") as f:
+        event = json.load(f)
+
     print(lambda_handler(event, None))
