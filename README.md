@@ -42,7 +42,7 @@ Função notificar Telegram:
 
 4 - Evento1 usa dados da Tabela2:
 	- Tabela2 contém as leituras feitas pelos sensores
-	- Cada item contém: região, id_sensor, data, hora, measurement
+	- Cada item contém: id_sensor, region, measurement e timezone (o sensor envia seu fuso horario)
 
 5 - Função2 salva dados na Tabela2:
 	- Função 2 é chamada através de uma API	Rest
