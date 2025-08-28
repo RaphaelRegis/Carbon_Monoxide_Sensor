@@ -26,12 +26,12 @@ Função notificar Telegram:
 
 1 - Função1 envia mensagens pro Telegram:
 	- Recebe: região, average_measurement
-	- Precisa de: sqs_queue_url, bot_token, channel_url
+	- Precisa de: sqs_queue_url, bot_token, channel_id
 	- Região: usada para buscar os outros dados na Tabela3
 	- Average_measurement: compõe a mensagem a ser enviada
 	- sqs_queue_url: para guardar mensagens não enviadas e tentar enviar depois
 	- bot_token: id do bot para enviar corretamente
-	- channel_url: para poder enviar no canal correto
+	- channel_id: para poder enviar no canal correto
 
 2 - Função1 é chamada quando um item é salvo na Tabela1:
 	- item contém: região, data, hora, average_measurement
@@ -55,7 +55,7 @@ Função notificar Telegram:
 	- Os atributos de cada registro estão descritos abaixo
 
 7 - Função3 é chamada quando alguém é salvo na Tabela3:
-	- Os dados salvos são: região, sqs_queue_url, bot_token, channel_url
+	- Os dados salvos são: região, sqs_queue_url, bot_token, channel_id
 
 9 - Função 4 é chamada quando alguém é removido da Tabela3:
 	- Ela exclui a fila e o evento de acordo com a região
