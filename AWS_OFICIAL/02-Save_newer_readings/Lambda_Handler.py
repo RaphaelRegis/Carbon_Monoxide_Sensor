@@ -28,7 +28,9 @@ def get_date_hour(timezone: str):
 
 
 def generate_new_item(event_body: dict, date_hour: dict) -> dict:
+    import uuid
     return {
+        "id_reading": {"S": str(uuid.uuid4())},
         "id_sensor": {"S": event_body["id_sensor"]},
         "region": {"S": event_body["region"]},
         "measurement": {"S": str(float(event_body["measurement"]).__ceil__())}, # the measurement is rounded up and then converted to a string
@@ -62,6 +64,7 @@ def lambda_handler(event, context):
         # generates new item to the database
         new_item = generate_new_item(event_body, date_hour)
 
+        print(new_item)
         # save new item in DynamoDB
         #response = persist_new_item(new_item)
         response = ""
