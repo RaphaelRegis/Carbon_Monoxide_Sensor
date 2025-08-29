@@ -38,7 +38,7 @@ def generate_new_item(event_body: dict, date_hour: dict) -> dict:
         "hour": {"S": date_hour["hour"]}
     }
 
-# TO DO: implementar codigo para chaves primarias
+
 def persist_new_item(new_item: dict):
     # import boto3
 
@@ -64,9 +64,8 @@ def lambda_handler(event, context):
         # generates new item to the database
         new_item = generate_new_item(event_body, date_hour)
 
-        print(new_item)
         # save new item in DynamoDB
-        #response = persist_new_item(new_item)
+        ##response = persist_new_item(new_item)
         response = ""
 
         return {"statusCode": 201, "message": f"Item salvo com sucesso: {response}"}
