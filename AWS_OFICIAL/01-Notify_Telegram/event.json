@@ -12,11 +12,10 @@
           "id": { "S": "123" }
         },
         "NewImage": {
-          "average_measurement": { "S": "10" },
+          "region": { "S": "southeast" },
           "date": { "S": "2025-08-01" },
           "hour": { "S": "14" },
-          "region": { "S": "southeast" },
-          "city": { "S": "Sao Paulo - SP" }
+          "average_measurement": { "S": "10" }
         },
         "SequenceNumber": "111",
         "SizeBytes": 123,
