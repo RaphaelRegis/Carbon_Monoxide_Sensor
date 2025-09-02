@@ -52,10 +52,11 @@ Função notificar Telegram:
 6 - Função3 cria toda a infraestrutura de eventos acima:
 	- Cria uma versão do Evento 1 para cada novo registro
 	- Cria também uma fila do sqs para cada novo registro
-	- Os atributos de cada registro estão descritos abaixo
-
-7 - Função3 é chamada quando alguém é salvo na Tabela3:
+	- Uma entidade com as informações é salva na Tabela3
 	- Os dados salvos são: região, sqs_queue_url, bot_token, channel_id
+
+7 - Função3 é através de uma API que recebe no corpo da requisição:
+	- região, bot_token e channel_id
 
 9 - Função 4 é chamada quando alguém é removido da Tabela3:
 	- Ela exclui a fila e o evento de acordo com a região
