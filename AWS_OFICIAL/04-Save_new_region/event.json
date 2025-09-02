@@ -42,6 +42,6 @@
     "domainName": "minhaapi.execute-api.us-east-1.amazonaws.com",
     "apiId": "abcde12345"
   },
-  "body": "{ \"region\": \"Vitoria_da_Conquista-BA\", \"bot_token\": \"12345678\", \"channel_id\": \"something_in_the_way_nirvana\" }",
+  "body": "{ \"region\": \"Vitoria_da_Conquista-BA\", \"timezone\": \"Brazil/East\", \"bot_token\": \"12345678\", \"channel_id\": \"something_in_the_way_nirvana\" }",
   "isBase64Encoded": false
 }

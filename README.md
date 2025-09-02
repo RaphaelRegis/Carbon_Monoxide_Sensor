@@ -56,7 +56,7 @@ Função notificar Telegram:
 	- Os dados salvos são: região, sqs_queue_url, bot_token, channel_id
 
 7 - Função3 é através de uma API que recebe no corpo da requisição:
-	- região, bot_token e channel_id
+	- região, timezone, bot_token e channel_id
 
 9 - Função 4 é chamada quando alguém é removido da Tabela3:
 	- Ela exclui a fila e o evento de acordo com a região
