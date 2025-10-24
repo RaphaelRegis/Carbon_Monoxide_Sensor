@@ -1,47 +1,93 @@
-from dotenv import load_dotenv
-import os
-import requests
+# import uuid
 import json
+from datetime import datetime
 
-# variaveis de ambiente
-load_dotenv()
+# print(str(uuid.uuid4()))
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
+# date_hour = "2025-09-25 15"
 
-mensagem = "Deus abençoe"
+# print(f"Data: {date_hour[:10]}")
+# print(f"Hora: {date_hour[11:]}")
 
-url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-
-payload = {
-    "chat_id": CHANNEL_ID,
-    "text": mensagem
+mensagens = {
+    "Messages": [
+        {
+            "MessageId": "string",
+            "ReceiptHandle": "MensagemDoBrian",
+            "MD5OfBody": "string",
+            "Body": '{"nome": "Brian", "data_hora": "2025-10-02 19"}',
+            "Attributes": {"string": "string"},
+            "MD5OfMessageAttributes": "string",
+            "MessageAttributes": {
+                "string": {
+                    "StringValue": "string",
+                    "BinaryValue": b"bytes",
+                    "StringListValues": [
+                        "string",
+                    ],
+                    "BinaryListValues": [
+                        b"bytes",
+                    ],
+                    "DataType": "string",
+                }
+            },
+        },
+        {
+            "MessageId": "string",
+            "ReceiptHandle": "MensagemDoPedro",
+            "MD5OfBody": "string",
+            "Body": '{"nome": "Pedro", "data_hora": "2025-10-02 18"}',
+            "Attributes": {"string": "string"},
+            "MD5OfMessageAttributes": "string",
+            "MessageAttributes": {
+                "string": {
+                    "StringValue": "string",
+                    "BinaryValue": b"bytes",
+                    "StringListValues": [
+                        "string",
+                    ],
+                    "BinaryListValues": [
+                        b"bytes",
+                    ],
+                    "DataType": "string",
+                }
+            },
+        },
+        {
+            "MessageId": "string",
+            "ReceiptHandle": "MensagemDoAntonio",
+            "MD5OfBody": "string",
+            "Body": '{"nome": "Antonio", "data_hora": "2025-09-02 20"}',
+            "Attributes": {"string": "string"},
+            "MD5OfMessageAttributes": "string",
+            "MessageAttributes": {
+                "string": {
+                    "StringValue": "string",
+                    "BinaryValue": b"bytes",
+                    "StringListValues": [
+                        "string",
+                    ],
+                    "BinaryListValues": [
+                        b"bytes",
+                    ],
+                    "DataType": "string",
+                }
+            },
+        },
+    ]
 }
 
-resposta = requests.post(url=url, data=payload)
 
-if resposta.status_code == 200:
-    print("Mensagem enviada com sucesso!")
-else:
-    print(f"Falha ao enviar a mensagem: {resposta.text}")
-    
-def lambda_handler(event, context):
-    # coleta a regiao e a medida de CO
-    
-    # busca os dados necessarios
-    
-    # lida com mensagens nao enviadas
-    
-    # tenta enviar a nova mensagem 
-    
-    return {
-        "statusCode": 200,
-        "message": json.dumps()
-    }
-    pass
+messages = mensagens["Messages"]
+bodies = []
 
-if __name__ == "__main__":
-    with open("AWS_Lambda\\save_data\\save_data_average\\event.json") as f:
-        event = json.load(f)
+for msg in messages:
+    body_dict = json.loads(msg["Body"])
+    body_dict["ReceiptHandle"] = msg["ReceiptHandle"]
+    bodies.append(body_dict)
 
-    print(lambda_handler(event, None))
+
+# Ordenar pela chave "data_hora"
+bodies.sort(key=lambda x: datetime.strptime(x["data_hora"], "%Y-%m-%d %H"))
+
+print(bodies)
