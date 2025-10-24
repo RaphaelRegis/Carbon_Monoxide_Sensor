@@ -1,13 +1,27 @@
 import json
-from dotenv import load_dotenv
-import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import os
+from boto3.dynamodb.conditions import Key
+import boto3
+import uuid
+
+# variaveis de ambiente
+NEWER_READINGS_TABLE = os.environ["NEWER_READINGS_TABLE"]
+AVERAGE_READINGS_TABLE = os.environ["AVERAGE_READINGS_TABLE"]
+
+# prepara o dynamodb
+dynamodb = boto3.client("dynamodb")
 
 
-# load environment variables
-load_dotenv()
-TABLE_NAME = os.getenv("TABLE_NAME")
+def get_query_parameters(event):
+    reading_region = event["detail"]["reading_region"]
+    reading_date_hour = get_date_hour(event["detail"]["timezone"])
+
+    return {
+        "reading_region": reading_region, 
+        "reading_date_hour": reading_date_hour
+    }
 
 
 def get_date_hour(timezone: str):
@@ -18,131 +32,82 @@ def get_date_hour(timezone: str):
     aware_datetime = naive_datetime.astimezone(zi)
 
     # prepare date and hour - date formatting: Year-month-day | hour formatting: Hour 00-23
-    date = aware_datetime.strftime("%Y-%m-%d")
-    hour = aware_datetime.strftime("%H")
+    reading_date = aware_datetime.strftime("%Y-%m-%d")
+    reading_hour = aware_datetime.strftime("%H")
     # ele pega a hora atual e volta 1 para poder pegar as leituras
-    hour = str(int(hour) - 1)
+    reading_hour = str(int(reading_hour) - 1)
 
-    return {"date": date, "hour": hour}
-
-
-def get_event_data(event: dict) -> dict:
-    date_hour = get_date_hour(event["detail"]["timezone"])
-
-    return {
-        "region": event["detail"]["region"],
-        "date": date_hour["date"],
-        "hour": date_hour["hour"]
-    }
+    return f"{reading_date} {reading_hour}"
 
 
-# TO DO: adicionar codigo para fazer a query no dynamodb
-def get_last_readings(region: str, date: str, hour: str) -> list:
+def get_newer_readings(query_parameters: dict):
 
-    response_mock = {
-        "Items": [
-            {
-                "id_reading": {"S": "123"},
-                "id_sensor": {"S": "vdc_01"},
-                "region": {"S": "Vitoria_da_Conquista-BA"},
-                "measurement": {"S": "10"},
-                "date": {"S": "2025-05-01"},
-                "hour": {"S": "16"}
-            },
-            {
-                "id_reading": {"S": "124"},
-                "id_sensor": {"S": "vdc_02"},
-                "region": {"S": "Vitoria_da_Conquista-BA"},
-                "measurement": {"S": "20"},
-                "date": {"S": "2025-05-01"},
-                "hour": {"S": "16"}
-            },
-            {
-                "id_reading": {"S": "125"},
-                "id_sensor": {"S": "vdc_03"},
-                "region": {"S": "Vitoria_da_Conquista-BA"},
-                "measurement": {"S": "30"},
-                "date": {"S": "2025-05-01"},
-                "hour": {"S": "16"}
-            }
-        ],
-        "Count": 3,
-        "ScannedCount": 3
-    }
+    response = dynamodb.query(
+        TableName=NEWER_READINGS_TABLE,
+        IndexName="reading_region-reading_date_hour-index",
+        KeyConditionExpression="reading_region = :reading_region AND reading_date_hour = :reading_date_hour",
+        ExpressionAttributeValues={
+            ":reading_region": {"S": query_parameters["reading_region"]},
+            ":reading_date_hour": {"S": query_parameters["reading_date_hour"]}
+        }
+    )
 
-    return response_mock["Items"]
+    return response["Items"]
 
 
-def get_average_reading(readings: list) -> str:
+def calculate_average(newer_readings: list):
     average_measurement = 0.0
     
     # it goes through all the readings and adds them up
-    for reading in readings:
+    for reading in newer_readings:
         average_measurement += float(reading["measurement"]["S"])
 
     # divides the measurement by the number of readings
-    average_measurement = float(average_measurement/len(readings)).__ceil__()
+    average_measurement = float(average_measurement/len(newer_readings)).__ceil__()
     
     return str(int(average_measurement))
 
 
-def generate_new_item(event_data: dict, average_measurement: str) -> dict:
-    import uuid
-
+def generate_new_item(query_parameters: dict, average_measurement: str):
     return {
-        "id_average": {"S": str(uuid.uuid4())},
-        "region": {"S": event_data["region"]},
-        "date": {"S": event_data["date"]},
-        "hour": {"S": event_data["hour"]},
+        "id_average_measurement": {"S": str(uuid.uuid4())},
+        "reading_region": {"S": query_parameters["reading_region"]},
+        "reading_date_hour": {"S": query_parameters["reading_date_hour"]},
         "average_measurement": {"S": average_measurement}
     }
 
 
-    ...
-
-
-# TO DO: mudar para o uso do resources ao invés do client
-def persist_new_item(new_item: dict):
-    # import boto3
-
-    # dynamodb = boto3.client("dynamodb")
-
-    # response = dynamodb.put_item(
-    #     Table_name=TABLE_NAME,
-    #     Item=new_item
-    # )
-
-    # return response
-    ...
+def persist_average_reading_item(new_item: dict):
+    response = dynamodb.put_item(
+        TableName=AVERAGE_READINGS_TABLE,
+        Item=new_item
+    )
 
 
 def lambda_handler(event, context):
     try:
-        # gets region, date and hour from the event obj
-        event_data = get_event_data(event)
+        # primeiro pega os dados necessarios para a consulta (regiao, data e hora)
+        query_parameters = get_query_parameters(event)
 
-        # query readings with region, date and hour
-        readings = get_last_readings(
-            event_data["region"], event_data["date"], event_data["hour"])
+        # consulta as leituras correspondentes
+        newer_readings = get_newer_readings(query_parameters)
 
-        # calculates average measurement
-        average_measurement = get_average_reading(readings)
+        # calcula a media
+        average_measurement = calculate_average(newer_readings)
 
-        # prepara o item para ser salvo
-        new_item = generate_new_item(event_data, average_measurement)
+        # gera o novo item
+        new_item = generate_new_item(query_parameters, average_measurement)
 
-        # salva o novo item
-        response = persist_new_item(new_item)
+        # salva na tabela de medias
+        persist_average_reading_item(new_item)
 
-        return {"statusCode": 201, "message": f"Item salvo com sucesso: {response}"}
-
+        return {
+            'statusCode': 201,
+            'body': json.dumps(new_item)
+        }
+    
     except Exception as e:
-        return {"statusCode": 500, "message": json.dumps(f"ERROR: {e}")}
-
-
-# testes locais
-if __name__ == "__main__":
-    with open("AWS_OFICIAL\\03-Save_average_readings\\event.json") as f:
-        event = json.load(f)
-
-    print(lambda_handler(event, None))
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f'Error: {e}')
+        }

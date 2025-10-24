@@ -1,56 +1,78 @@
-from dotenv import load_dotenv
-import os
-import requests
 import json
+import os
+from datetime import datetime
+import requests
+import boto3
 
-# variaveis de ambiente
-load_dotenv()
-
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
+sqs_client = boto3.client("sqs")
 
 
-def get_event_data(event: dict) -> dict:
-    for record in event["Records"]:
-        region = record["dynamodb"]["NewImage"]["region"]["S"]
-        average_measurement = record["dynamodb"]["NewImage"]["average_measurement"]["S"]
-        date = record["dynamodb"]["NewImage"]["date"]["S"]
-        hour = record["dynamodb"]["NewImage"]["hour"]["S"]
+def get_event_region(event):
+    return event.get("reading_region")
+   
+
+def get_region_data(reading_region: str):
+    region_data = json.loads(os.environ[f"{reading_region.upper()}_DATA"])
 
     return {
-        "region": region,
-        "average_measurement": average_measurement,
-        "date": date,
-        "hour": hour,
+        "sqs_queue_url": region_data["sqs_queue_url"],
+        "channel_id": region_data["channel_id"],
+        "bot_token": region_data["bot_token"]
     }
 
 
-def get_ppm_message(event_data: dict, co_recommentations: dict) -> str:
-    # define initial message info
-    new_message = f"Média mais recente: {int(event_data['average_measurement'])} ppm\nData: {event_data['date']} | Hora: {event_data['hour']}:00\n"
+def get_sqs_messages(sqs_queue_url: str):
+    print("Buscando mensagens no sqs...")
+    response = sqs_client.receive_message(
+        QueueUrl=sqs_queue_url
+    )
 
-    # run through ppm messages
-    for range in co_recommentations["ranges"]:
-        min_val = range["min"]
-        max_val = range["max"]
+    if "Messages" in response:
 
-        # verify if it's the last posible message
-        if max_val is None:
-            if int(event_data["average_measurement"]) >= min_val:
-                return new_message + range["message"]
+        print(f"MENSAGENS ENCONTRADAS NA FILA: {response["Messages"]}")
 
-        # verify if the ppm measure is in the range of current min and max values
-        elif min_val <= int(event_data["average_measurement"]) <= max_val:
-            return new_message + range["message"]
+        return response["Messages"]
 
-    # error in case of incompatible ppm
-    raise Exception(f"Valor fora do intervalo conhecido: {int(event_data['average_measurement'])}")
+    else:
+        print("Nenhuma mensagem encontrada!")
+        return []
 
 
-def send_message(message: str):
+def organize_messages(messages: list):
+    organized_messages = []
+
+    for msg in messages:
+        body_dict = json.loads(msg["Body"])
+
+        # incrementa a lista com o receipthandle da mensagem para que possamos exclui-la da fila depois
+        body_dict["ReceiptHandle"] = msg["ReceiptHandle"]
+        organized_messages.append(body_dict)
+
+    # Ordenar pela chave "data_hora"
+    organized_messages.sort(key=lambda x: datetime.strptime(x["reading_date_hour"], "%Y-%m-%d %H"))
+
+    return organized_messages
+
+
+def handle_messages(messages: list, region_data: dict):
+
+    for message in messages:
+        message_sended = send_message(message["message"], region_data["channel_id"], region_data["bot_token"])
+
+        if message_sended:
+            sqs_client.delete_message(
+                QueueUrl=region_data["sqs_queue_url"],
+                ReceiptHandle=message["ReceiptHandle"]
+            )
+
+        else:
+            raise Exception("Falha ao enviar as mensagens!")
+
+
+def send_message(message: str, channel_id: str, bot_token:str):
     # prepara o payload com a mensagem para enviar
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": CHANNEL_ID, "text": message}
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {"chat_id": channel_id, "text": message}
 
     # envia a mensagem
     result = requests.post(url=url, data=payload)
@@ -65,55 +87,34 @@ def send_message(message: str):
     return sended_message
 
 
-def handle_old_messages(sqs_url: str):
-    # procura mensagens no sqs
-
-
-    # tenta enviar as que ficaram caso tenha alguma
-
-
-    # se der sucesso, ela eh excluida do sqs
-    ...
-
-
-def handle_new_message(sqs_url: str):
-    # tenta enviar a nova mensagem
-
-
-    # em caso de falha, envia ela pro sqs
-
-
-    # usa excessao para notificar
-    ...
-
-
 def lambda_handler(event, context):
+
     try:
-        event_data = get_event_data(event=event)
+        # get region from sqs event
+        reading_region = get_event_region(event)
+        print(f"REGIAO: {reading_region}")
 
-        # query for sqs_url, bot_token and channel_id - FACA ESSA PARTE QUANDO A TABELA CORRETA JA ESTIVER FUNCIONANDO
+        # pega os dados corretamente de acordo com a regiao
+        region_data = get_region_data(reading_region)
+        print(f"DADOS DA REGIAO: {region_data}")
 
-        # lida com mensagens nao enviadas
-        handle_old_messages()
+        # busca as mensagens na fila sqs e depois organiza
+        messages =  get_sqs_messages(region_data["sqs_queue_url"])
+        organized_messages = organize_messages(messages)
+        print(f"MENSAGENS DO SQS ORGANIZADAS: {organized_messages}")
 
-        # creates new message
-        with open("AWS_OFICIAL\\01-Notify_Telegram\\co_recommendations.json", encoding="utf-8") as g:
-            co_recommentations = json.load(g)
+        # tenta enviar as mensagens pro canal correto do telegram
+        handle_messages(organized_messages, region_data)
 
-        new_message = get_ppm_message(event_data, co_recommentations)
-
-        # tenta enviar a nova mensagem
-        handle_new_message()
-
-        return {"statusCode": 200, "message": new_message}
-
+        # sucess return
+        return {
+            'statusCode': 200,
+            'body': json.dumps(f"MENSAGENS ENVIADAS!")
+        }
+    
     except Exception as e:
-        return {"statusCode": 500, "message": json.dumps(f"ERROR: {e}")}
-
-
-# testes locais
-if __name__ == "__main__":
-    with open("AWS_OFICIAL\\01-Notify_Telegram\\event.json") as f:
-        event = json.load(f)
-
-    print(lambda_handler(event, None))
+        print(f"ERRO: {e}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f"ERRO: {e}")
+        }
