@@ -2,6 +2,7 @@ import json
 import boto3
 import os
 
+sqs = boto3.client('sqs')
 
 def get_event_data(event):
     for record in event["Records"]:
@@ -38,55 +39,81 @@ def get_ppm_message(event_data: dict, co_recommentations: dict) -> str:
     raise Exception(f"Valor fora do intervalo conhecido: {int(event_data['average_measurement'])}")
 
 
+def get_sqs_messages(sqs_queue_url: str):
+    response = sqs.receive_message(
+        QueueUrl=sqs_queue_url
+    )
+
+    if "Messages" in response:
+        return json.loads(response["Messages"][0]["Body"])
+
+    return []
+
+
+def get_new_message_list(sqs_messages: list, new_message: str) -> list:
+    new_message_list = []
+
+    # pega a lista com mensagens anteriores se tiver e poe na nova lista
+    for old_message in sqs_messages:
+        new_message_list.append(old_message)
+            
+
+    # adiciona a nova mensagem
+    new_message_list.append(new_message)
+
+    return new_message_list
+
+
 def send_message_to_sqs(body_message: str, sqs_queue_url):
-    sqs = boto3.client('sqs')
 
     response = sqs.send_message(
         QueueUrl=sqs_queue_url,
-        MessageBody=body_message
+        MessageBody=body_message,
+        MessageGroupId="channel_messages",
     )
 
-    print(f"Message sent to SQS: {response}")
 
-
-def call_lambda_function(reading_region: str, lambda_function_name: str):
+def call_lambda_function(reading_region: str, channel_messages: list, lambda_function_name: str):
     lambda_client = boto3.client('lambda')
 
     response = lambda_client.invoke(
         FunctionName=lambda_function_name,
         InvocationType='Event',
-        Payload=json.dumps({"reading_region": reading_region})
+        Payload=json.dumps({"reading_region": reading_region, "channel_messages": channel_messages})
     )
 
-    print(f"Lambda function called: {response}")
+    return response
 
 
 def lambda_handler(event, context):
     try:
-        print(f"Event: {event}")
         # get the new object
         event_data = get_event_data(event)
+        print(f"Dados do evento: {event_data}")
 
         # creates the new message
         with open("co_recommendations.json", encoding="utf-8") as f:
             co_recommendations = json.load(f)
 
         new_message = get_ppm_message(event_data, co_recommendations)
+        print(f"Nova messagem: {new_message}")
 
         # get sqs_queue_url
         sqs_queue_url = os.environ[f"{event_data["reading_region"].upper()}_SQS_QUEUE_URL"]
 
-        # prepare sqs body message
-        message_body = json.dumps({"message": new_message, "reading_date_hour": event_data["reading_date_hour"]})
+        # procura outras mensagens no sqs
+        sqs_messages = get_sqs_messages(sqs_queue_url)
+        print(f"Mensagens anteriores: {sqs_messages}")
 
-        # send message to sqs
-        send_message_to_sqs(message_body, sqs_queue_url)
+        # prepare channel messages list
+        channel_messages = get_new_message_list(sqs_messages, new_message)
+        print(f"Nova mensagens para o canal: {channel_messages}")
 
         # chama a funcao lambda para mandar mensagens
         lambda_function_name = os.environ["LAMBDA_FUNCTION_NAME"]
 
-        call_lambda_function(event_data["reading_region"], lambda_function_name)
-
+        response = call_lambda_function(event_data["reading_region"], channel_messages, lambda_function_name)
+        print(f"{response}")
 
         return {
             'statusCode': 200,
@@ -95,6 +122,7 @@ def lambda_handler(event, context):
 
 
     except Exception as e:
+        print(f"Error: {e}")
         return {
             'statusCode': 500,
             'body': json.dumps(f"Error: {e}")
