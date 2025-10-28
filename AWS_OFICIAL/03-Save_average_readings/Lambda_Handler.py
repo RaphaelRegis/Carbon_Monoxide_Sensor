@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
 from boto3.dynamodb.conditions import Key
@@ -25,17 +25,16 @@ def get_query_parameters(event):
 
 
 def get_date_hour(timezone: str):
-    # get datetime without considering timezone
-    naive_datetime = datetime.now()
-    # convert date to sensor timezone
+    # pega a hora correta de acordo com o timezone
     zi = ZoneInfo(timezone)
-    aware_datetime = naive_datetime.astimezone(zi)
+    aware_datetime = datetime.now(zi)
+
+    # subtrai uma hora, uma vez que as leituras foram feitas ao longo da hora anterior
+    aware_datetime = aware_datetime - timedelta(hours=1)
 
     # prepare date and hour - date formatting: Year-month-day | hour formatting: Hour 00-23
     reading_date = aware_datetime.strftime("%Y-%m-%d")
     reading_hour = aware_datetime.strftime("%H")
-    # ele pega a hora atual e volta 1 para poder pegar as leituras
-    reading_hour = str(int(reading_hour) - 1)
 
     return f"{reading_date} {reading_hour}"
 
@@ -56,8 +55,13 @@ def get_newer_readings(query_parameters: dict):
 
 
 def calculate_average(newer_readings: list):
-    average_measurement = 0.0
     
+    # caso nao tenha nenhuma leitura ele retorna um erro
+    if newer_readings == []:
+        raise Exception("No readings found")
+
+    average_measurement = 0.0
+
     # it goes through all the readings and adds them up
     for reading in newer_readings:
         average_measurement += float(reading["measurement"]["S"])
