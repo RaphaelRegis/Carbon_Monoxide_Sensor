@@ -4,11 +4,11 @@ from datetime import datetime
 import requests
 import boto3
 
-sqs_client = boto3.client("sqs")
 
 
-def get_event_region(event):
-    return event.get("reading_region")
+
+def get_event_data(event):
+    return {"reading_region": event.get("reading_region"), "channel_messages": event.get("channel_messages")}
    
 
 def get_region_data(reading_region: str):
@@ -21,52 +21,19 @@ def get_region_data(reading_region: str):
     }
 
 
-def get_sqs_messages(sqs_queue_url: str):
-    print("Buscando mensagens no sqs...")
-    response = sqs_client.receive_message(
-        QueueUrl=sqs_queue_url
-    )
+def handle_messages(channel_messages: list, region_data: dict):
 
-    if "Messages" in response:
-
-        print(f"MENSAGENS ENCONTRADAS NA FILA: {response["Messages"]}")
-
-        return response["Messages"]
-
-    else:
-        print("Nenhuma mensagem encontrada!")
-        return []
-
-
-def organize_messages(messages: list):
-    organized_messages = []
-
-    for msg in messages:
-        body_dict = json.loads(msg["Body"])
-
-        # incrementa a lista com o receipthandle da mensagem para que possamos exclui-la da fila depois
-        body_dict["ReceiptHandle"] = msg["ReceiptHandle"]
-        organized_messages.append(body_dict)
-
-    # Ordenar pela chave "data_hora"
-    organized_messages.sort(key=lambda x: datetime.strptime(x["reading_date_hour"], "%Y-%m-%d %H"))
-
-    return organized_messages
-
-
-def handle_messages(messages: list, region_data: dict):
-
-    for message in messages:
-        message_sended = send_message(message["message"], region_data["channel_id"], region_data["bot_token"])
+    for message in channel_messages:
+        message_sended = send_message(message, region_data["channel_id"], region_data["bot_token"])
 
         if message_sended:
-            sqs_client.delete_message(
-                QueueUrl=region_data["sqs_queue_url"],
-                ReceiptHandle=message["ReceiptHandle"]
-            )
-
+            channel_messages.remove(message)
+        
         else:
-            raise Exception("Falha ao enviar as mensagens!")
+            print("Falha ao enviar as mensagens!")
+            break
+
+    return channel_messages
 
 
 def send_message(message: str, channel_id: str, bot_token:str):
@@ -87,24 +54,35 @@ def send_message(message: str, channel_id: str, bot_token:str):
     return sended_message
 
 
+def update_sqs_queue(not_sended_messages:list, region_data: dict):
+    sqs_client = boto3.client("sqs")
+
+    # caso hajam mensagens nao enviadas, envia a lista com elas para a fila novamente
+    if len(not_sended_messages) > 0:
+        response = sqs_client.send_message(
+            QueueUrl=region_data["sqs_queue_url"],
+            MessageBody=json.dumps(not_sended_messages),
+            MessageGroupId="channel_messages",
+        )
+
+
 def lambda_handler(event, context):
 
     try:
         # get region from sqs event
-        reading_region = get_event_region(event)
-        print(f"REGIAO: {reading_region}")
+        event_data = get_event_data(event)
+        print(f"Event data: {event_data}")
 
         # pega os dados corretamente de acordo com a regiao
-        region_data = get_region_data(reading_region)
-        print(f"DADOS DA REGIAO: {region_data}")
+        region_data = get_region_data(event_data["reading_region"])
+        print(f"Region data: {region_data}")
 
-        # busca as mensagens na fila sqs e depois organiza
-        messages =  get_sqs_messages(region_data["sqs_queue_url"])
-        organized_messages = organize_messages(messages)
-        print(f"MENSAGENS DO SQS ORGANIZADAS: {organized_messages}")
+        # tenta enviar as mensagens pro canal do telegram
+        not_sended_messages = handle_messages(event_data["channel_messages"], region_data)
+        print(f"Mensagens nao enviadas: {not_sended_messages}")
 
-        # tenta enviar as mensagens pro canal correto do telegram
-        handle_messages(organized_messages, region_data)
+        # lida com as mensagens que nao foram enviadas
+        update_sqs_queue(not_sended_messages, region_data)
 
         # sucess return
         return {
