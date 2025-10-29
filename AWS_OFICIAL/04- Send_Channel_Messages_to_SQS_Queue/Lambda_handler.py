@@ -29,11 +29,11 @@ def get_ppm_message(event_data: dict, co_recommentations: dict) -> str:
         # verify if it's the last posible message
         if max_val is None:
             if int(event_data["average_measurement"]) >= min_val:
-                return new_message + range["message"]
+                return {"message_text": f"{new_message}{range['message']}", "air_quality": range["air_quality"]}
 
         # verify if the ppm measure is in the range of current min and max values
         elif min_val <= int(event_data["average_measurement"]) <= max_val:
-            return new_message + range["message"]
+            return {"message_text": f"{new_message}{range['message']}", "air_quality": range["air_quality"]}
 
     # error in case of incompatible ppm
     raise Exception(f"Valor fora do intervalo conhecido: {int(event_data['average_measurement'])}")
@@ -45,6 +45,12 @@ def get_sqs_messages(sqs_queue_url: str):
     )
 
     if "Messages" in response:
+        # delete the message from the queue
+        sqs.delete_message(
+            QueueUrl=sqs_queue_url,
+            ReceiptHandle=response["Messages"][0]["ReceiptHandle"]
+        )
+
         return json.loads(response["Messages"][0]["Body"])
 
     return []
@@ -62,15 +68,6 @@ def get_new_message_list(sqs_messages: list, new_message: str) -> list:
     new_message_list.append(new_message)
 
     return new_message_list
-
-
-def send_message_to_sqs(body_message: str, sqs_queue_url):
-
-    response = sqs.send_message(
-        QueueUrl=sqs_queue_url,
-        MessageBody=body_message,
-        MessageGroupId="channel_messages",
-    )
 
 
 def call_lambda_function(reading_region: str, channel_messages: list, lambda_function_name: str):
