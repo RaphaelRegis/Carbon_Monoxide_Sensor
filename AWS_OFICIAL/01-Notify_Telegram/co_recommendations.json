@@ -1,131 +1,124 @@
 {
-  "ranges": [
-    {
-      "min": 0,
-      "max": 1,
-      "message": "🌿  Nível natural ou ar limpo. Sem riscos para a saúde."
-    },
-    {
-      "min": 1,
-      "max": 4,
-      "message": "⚠️  Pequeno aumento detectado. Estudos mostram que cada 1 ppm já pode aumentar levemente o risco de problemas cardiovasculares em idosos. Ainda não é perigoso para a maioria das pessoas, mas já merece atenção."
-    },
-    {
-      "min": 3,
-      "max": 7,
-      "message": "😮‍💨  Entre 3 e 7 ppm já há evidências de aumento nas internações por asma e riscos para gestantes (baixo peso ao nascer). Pessoas sensíveis (idosos, crianças e grávidas) devem evitar exposição prolongada."
-    },
-    {
-      "min": 8,
-      "max": 9,
-      "message": "🚨  9 ppm é o limite máximo recomendado pela OMS e EPA para 8 horas de exposição. Já pode causar alterações no coração em pessoas com doenças cardíacas. Autoridades de saúde usam esse valor como gatilho para alertas."
-    },
-    {
-      "min": 10,
-      "max": 29,
-      "message": "⚠️  Exposição prolongada nesse nível pode causar sintomas leves como dor de cabeça, fadiga e mal-estar. Pessoas com doenças respiratórias ou cardíacas são mais vulneráveis."
-    },
-    {
-      "min": 30,
-      "max": 69,
-      "message": "⛔  Nível perigoso! Risco de tontura, náusea e problemas respiratórios. Evite a exposição e procure ambientes ventilados imediatamente."
-    },
-    {
-      "min": 10,
-      "max": 14,
-      "message": "⚠️ A partir de 10 ppm já há aumento significativo de mortes e internações por problemas cardíacos. Pessoas com doenças cardíacas ou pulmonares estão em risco maior."
-    },
-    {
-      "min": 15,
-      "max": 19,
-      "message": "😰 Entre 15 e 20 ppm a OMS alerta para queda no desempenho físico, menor capacidade de exercício e maior chance de dor no peito (angina) em pessoas vulneráveis."
-    },
-    {
-      "min": 20,
-      "max": 24,
-      "message": "🔥 20 ppm é típico de gases de exaustão de aquecedores e chaminés mesmo quando bem regulados. Já pode prejudicar a saúde se houver exposição prolongada."
-    },
-    {
-      "min": 25,
-      "max": 26,
-      "message": "👶 Exposição crônica durante a gravidez em torno de 25 ppm pode afetar o desenvolvimento cerebral do bebê, trazendo riscos permanentes."
-    },
-    {
-      "min": 27,
-      "max": 29,
-      "message": "🤒 Estudos mostram que 27 ppm aumenta em mais de 20% as queixas cardiorrespiratórias (tosse, falta de ar, dor no peito)."
-    },
-    {
-      "min": 30,
-      "max": 34,
-      "message": "⛔ A partir de 30 ppm já pode surgir dor no peito induzida por esforço em pessoas com problemas cardíacos. O risco é real mesmo em exposições não tão longas."
-    },
-    {
-      "min": 35,
-      "max": 49,
-      "message": "🚒 35 ppm é o ponto em que bombeiros colocam máscaras de oxigênio. Também é o limite máximo permitido pela EPA para 1 hora de exposição. Atenção máxima!"
-    },
-    {
-      "min": 50,
-      "max": 69,
-      "message": "☠️ Acima de 50 ppm o monóxido de carbono já é considerado tóxico até para adultos saudáveis. Pode causar sintomas graves rapidamente."
-    },
-    {
-      "min": 70,
-      "max": 99,
-      "message": "💔 Entre 70 e 75 ppm já surgem dores no peito em pacientes cardíacos. O coração recebe menos oxigênio, aumentando o risco de complicações sérias."
-    },
-    {
-      "min": 100,
-      "max": 199,
-      "message": "🤕 Em torno de 100 ppm surgem sintomas em pessoas saudáveis: dor de cabeça, cansaço, tontura e náusea em 2 horas. Após 5 horas pode haver danos ao coração e ao cérebro."
-    },
-    {
-      "min": 200,
-      "max": 399,
-      "message": "⚠️ 200 ppm já causa dores de cabeça e náusea em adultos saudáveis. NIOSH e OSHA recomendam evacuação imediata do ambiente neste nível."
-    },
-    {
-      "min": 400,
-      "max": 499,
-      "message": "☠️ 400 ppm pode causar dor de cabeça intensa em 1 a 2 horas e risco de morte em até 3 horas de exposição. Emergência total!"
-    },
-    {
-      "min": 500,
-      "max": 799,
-      "message": "🚗 500 ppm é comum em garagens com carros ligados. Em poucos minutos já se torna perigoso. Em 800 ppm, tontura, náusea e convulsões aparecem em menos de 45 min, levando à inconsciência e morte em 2 horas."
-    },
-    {
-      "min": 800,
-      "max": null,
-      "message": "🆘 Acima de 800 ppm, a morte pode ocorrer em menos de 1 hora. Risco extremo e imediato! Saia do local e procure ajuda urgente."
-    }
-  ],
-  "sources": {
-    "copyright": "Copyright © 2014 Child & Elder Care Insights, Inc. #150",
-    "file_name": "Carbon-Monoxide-Risks-at-Low-Levels.pdf",
-    "file_size": "258 KB",
-    "title": "",
-    "author": "Elisabeth",
-    "creation_date": "2014-03-25",
-    "url": "https://www.spec-sensors.com/wp-content/uploads/2016/05/Carbon-Monoxide-Risks-at-Low-Levels.pdf"
-  }
+    "ranges": [
+        {
+            "min": 0,
+            "max": 1,
+            "message": "🌿  Nível natural ou ar limpo. Sem riscos para a saúde.",
+            "air_quality": "QUALIDADE_MUITO_BOA"
+        },
+        {
+            "min": 1,
+            "max": 4,
+            "message": "⚠️  Pequeno aumento detectado. Estudos mostram que cada 1 ppm já pode aumentar levemente o risco de problemas cardiovasculares em idosos. Ainda não é perigoso para a maioria das pessoas, mas já merece atenção.",
+            "air_quality": "QUALIDADE_BOA"
+        },
+        {
+            "min": 3,
+            "max": 7,
+            "message": "😮‍💨  Entre 3 e 7 ppm já há evidências de aumento nas internações por asma e riscos para gestantes (baixo peso ao nascer). Pessoas sensíveis (idosos, crianças e grávidas) devem evitar exposição prolongada.",
+            "air_quality": "QUALIDADE_MODERADA"
+        },
+        {
+            "min": 8,
+            "max": 9,
+            "message": "🚨  9 ppm é o limite máximo recomendado pela OMS e EPA para 8 horas de exposição. Já pode causar alterações no coração em pessoas com doenças cardíacas. Autoridades de saúde usam esse valor como gatilho para alertas.",
+            "air_quality": "QUALIDADE_RUIM"
+        },
+        {
+            "min": 10,
+            "max": 29,
+            "message": "⚠️  Exposição prolongada nesse nível pode causar sintomas leves como dor de cabeça, fadiga e mal-estar. Pessoas com doenças respiratórias ou cardíacas são mais vulneráveis.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 30,
+            "max": 69,
+            "message": "⛔  Nível perigoso! Risco de tontura, náusea e problemas respiratórios. Evite a exposição e procure ambientes ventilados imediatamente.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 10,
+            "max": 14,
+            "message": "⚠️ A partir de 10 ppm já há aumento significativo de mortes e internações por problemas cardíacos. Pessoas com doenças cardíacas ou pulmonares estão em risco maior.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 15,
+            "max": 19,
+            "message": "😰 Entre 15 e 20 ppm a OMS alerta para queda no desempenho físico, menor capacidade de exercício e maior chance de dor no peito (angina) em pessoas vulneráveis.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 20,
+            "max": 24,
+            "message": "🔥 20 ppm é típico de gases de exaustão de aquecedores e chaminés mesmo quando bem regulados. Já pode prejudicar a saúde se houver exposição prolongada.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 25,
+            "max": 26,
+            "message": "👶 Exposição crônica durante a gravidez em torno de 25 ppm pode afetar o desenvolvimento cerebral do bebê, trazendo riscos permanentes.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 27,
+            "max": 29,
+            "message": "🤒 Estudos mostram que 27 ppm aumenta em mais de 20% as queixas cardiorrespiratórias (tosse, falta de ar, dor no peito).",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 30,
+            "max": 34,
+            "message": "⛔ A partir de 30 ppm já pode surgir dor no peito induzida por esforço em pessoas com problemas cardíacos. O risco é real mesmo em exposições não tão longas.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 35,
+            "max": 49,
+            "message": "🚒 35 ppm é o ponto em que bombeiros colocam máscaras de oxigênio. Também é o limite máximo permitido pela EPA para 1 hora de exposição. Atenção máxima!",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 50,
+            "max": 69,
+            "message": "☠️ Acima de 50 ppm o monóxido de carbono já é considerado tóxico até para adultos saudáveis. Pode causar sintomas graves rapidamente.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 70,
+            "max": 99,
+            "message": "💔 Entre 70 e 75 ppm já surgem dores no peito em pacientes cardíacos. O coração recebe menos oxigênio, aumentando o risco de complicações sérias.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 100,
+            "max": 199,
+            "message": "🤕 Em torno de 100 ppm surgem sintomas em pessoas saudáveis: dor de cabeça, cansaço, tontura e náusea em 2 horas. Após 5 horas pode haver danos ao coração e ao cérebro.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 200,
+            "max": 399,
+            "message": "⚠️ 200 ppm já causa dores de cabeça e náusea em adultos saudáveis. NIOSH e OSHA recomendam evacuação imediata do ambiente neste nível.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 400,
+            "max": 499,
+            "message": "☠️ 400 ppm pode causar dor de cabeça intensa em 1 a 2 horas e risco de morte em até 3 horas de exposição. Emergência total!",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 500,
+            "max": 799,
+            "message": "🚗 500 ppm é comum em garagens com carros ligados. Em poucos minutos já se torna perigoso. Em 800 ppm, tontura, náusea e convulsões aparecem em menos de 45 min, levando à inconsciência e morte em 2 horas.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        },
+        {
+            "min": 800,
+            "max": null,
+            "message": "🆘 Acima de 800 ppm, a morte pode ocorrer em menos de 1 hora. Risco extremo e imediato! Saia do local e procure ajuda urgente.",
+            "air_quality": "QUALIDADE_PESSIMA"
+        }
+    ]
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
