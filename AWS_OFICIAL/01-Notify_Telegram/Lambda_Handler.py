@@ -23,17 +23,21 @@ def get_region_data(reading_region: str):
 
 def handle_messages(channel_messages: list, region_data: dict):
 
-    for message in channel_messages:
-        message_sended = send_message(message, region_data["channel_id"], region_data["bot_token"])
+    # esse valor serve para ajudar a retornar as mensagens nao enviadas
+    sended_messages_index = 0
+
+    for message_dict in channel_messages:
+        message_sended = send_message(message_dict["message_text"], region_data["channel_id"], region_data["bot_token"])
 
         if message_sended:
-            channel_messages.remove(message)
+            sended_messages_index += 1
+            print(f"Mensagem enviada: {message_dict['message_text']}")
         
         else:
             print("Falha ao enviar as mensagens!")
             break
 
-    return channel_messages
+    return channel_messages[sended_messages_index:]
 
 
 def send_message(message: str, channel_id: str, bot_token:str):
@@ -59,6 +63,7 @@ def update_sqs_queue(not_sended_messages:list, region_data: dict):
 
     # caso hajam mensagens nao enviadas, envia a lista com elas para a fila novamente
     if len(not_sended_messages) > 0:
+        print("Devolvendo mensagens para o SQS")
         response = sqs_client.send_message(
             QueueUrl=region_data["sqs_queue_url"],
             MessageBody=json.dumps(not_sended_messages),
