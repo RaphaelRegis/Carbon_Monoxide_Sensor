@@ -1,92 +1,78 @@
 #include <WiFi.h>
+#include <HTTPClient.h>
 #include <MQUnifiedsensor.h>
 
 
-// Sensor MQ-7
-#define SENSOR_PLACA "ESP-32"
-#define SENSOR_VOLTAGE_RESOLUTION 3.3
-#define SENSOR_ANALOG_PIN 32
-#define SENSOR_TYPE "MQ-7"
-#define SENSOR_ADC_RESOLUTION 12
-#define SENSOR_CLEAN_AIR_RATIO 27.5
-#define SENSOR_PWM_PIN 5
+// hardware configurations
+#define BOARD "ESP-32"
+#define PIN_ANALOG 34
+#define VOLTAGE_RESOLUTION 3.3
+#define ADC_BIT_RESOLUTION 12
+#define RATIO_MQ7_CLEAN_AIR 27.0  // valor típico
+
+// MQ-7 object
+MQUnifiedsensor MQ7(BOARD, VOLTAGE_RESOLUTION, ADC_BIT_RESOLUTION, PIN_ANALOG, "MQ-7");
+
+// Wi-Fi and request configs
+const char* ssid = "";
+const char* password = "";
+const char* url = "https://zt31fcny10.execute-api.us-east-2.amazonaws.com/prod";
 
 
-// Definicoes do dispositivo
+// device specifications
 const String id_sensor = "Centro_Vitoria_da_Conquista_BA_01";
 const String region = "Centro_Vitoria_da_Conquista_BA";
 const String timezone = "Brazil/East";
 
-
-// Intervalos de tempo para ciclos de aquecimento e leitura
-const unsigned long HEATING_HIGH_DURATION = 60 * 1000;  // 60 segundos em 5V
-const unsigned long HEATING_LOW_DURATION = 90 * 1000;   // 90 segundos em 1.4V
-const unsigned long CYCLE_WAIT_DURATION = 450 * 1000;   // 7min30s entre ciclos
-
-
-// Objetos globais
-MQUnifiedsensor MQ7(SENSOR_PLACA, SENSOR_VOLTAGE_RESOLUTION, SENSOR_ADC_RESOLUTION, SENSOR_ANALOG_PIN, SENSOR_TYPE);
-
-
-// Configurações da rede Wi-Fi e requisicao
-const char* ssid = "Familia Araujo";
-const char* password = "synthwave";
-const char* url = "http://minhaUrl/minhaApi";
-
 void calibrateSensor() {
-  Serial.print("Calibrando sensor MQ-7... ");
-
+  Serial.println("Calibrando... Aguarde 5 segundos");
   float calcR0 = 0;
-  for (int i = 1; i <= 10; i++) {
+  for (int i = 0; i < 50; i++) {
     MQ7.update();
-    calcR0 += MQ7.calibrate(SENSOR_CLEAN_AIR_RATIO);
-    Serial.print(".");
+    calcR0 += MQ7.calibrate(RATIO_MQ7_CLEAN_AIR);
+    delay(100);
   }
+  MQ7.setR0(calcR0 / 50);
 
-  MQ7.setR0(calcR0 / 10.0);
-  Serial.println(" Concluído!");
+  Serial.print("R0 = ");
+  Serial.println(MQ7.getR0());
 
-  // Verificações de erro na calibração
-  if (isinf(calcR0)) {
-    Serial.println("Erro: Circuito aberto! Verifique o cabeamento.");
+  if (isnan(MQ7.getR0())) {
+    Serial.println("Falha ao calibrar o sensor!");
     while (1)
       ;
   }
 
-  if (calcR0 == 0) {
-    Serial.println("Erro: Curto-circuito no pino analógico!");
-    while (1)
-      ;
-  }
+  Serial.println("Calibração concluída!");
 }
 
 
 void setupSensor() {
-  // Configuração do modelo matemático de PPM
-  MQ7.setRegressionMethod(1);  // _PPM = a * ratio^b
-  MQ7.setA(99.042);
-  MQ7.setB(-1.518);
 
-  // Inicialização do sensor
+  // Configuration of the PPM mathematical model
+  MQ7.setRegressionMethod(1);  // regression method 1 = exponential — _PPM = a * ratio^b
+  MQ7.setA(99.042);            // standard curve parameters from the library
+  MQ7.setB(-1.518);            // curve to CO
+
+  // Sensor initialization
   MQ7.init();
-  pinMode(SENSOR_PWM_PIN, OUTPUT);
 
-  // Calibração
+  // Calibration
   calibrateSensor();
 }
 
 
 void connectWiFi() {
   Serial.println("Conectando ao Wi-Fi...");
-  WiFi.begin(ssid, password);  // tenta conectar ao WiFi
+  WiFi.begin(ssid, password);  // try to connect to WiFi
 
-  // espera ate o wifi conectar
+  // wait until the wifi connects
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
 
-  // imprime informacoes da conexao
+  // prints connection information
   Serial.println("\nConectado ao Wi-Fi!");
   Serial.print("Endereço IP: ");
   Serial.println(WiFi.localIP());
@@ -110,55 +96,49 @@ void sendRequest(String requestBody) {
   Serial.print("Conectando a: ");
   Serial.println(url);
 
-  http.begin(url);  // Inicia conexão
-  http.addHeader("Content-Type", "application/json"); // define o header para a requisicao
+  http.begin(url);                                     // Start connection
+  http.addHeader("Content-Type", "application/json");  // Sets the header for the request
 
-  int httpCode = http.POST(requestBody);  // Faz requisição GET
+  int httpCode = http.POST(requestBody);  // Make a POST request
 
   if (httpCode > 0) {
-      Serial.printf("Código de resposta: %d\n", httpCode);
-      String payload = http.getString();
-      Serial.println("Resposta do servidor:");
-      Serial.println(payload);
-    } else {
-      Serial.printf("Erro na requisição: %s\n", http.errorToString(httpCode).c_str());
-    }
+    Serial.printf("Código de resposta: %d\n", httpCode);
+    String payload = http.getString();
+    Serial.println("Resposta do servidor:");
+    Serial.println(payload);
+  } else {
+    Serial.printf("Erro na requisição: %s\n", http.errorToString(httpCode).c_str());
+  }
 
-    http.end();  // Fecha conexão
-
+  http.end();  // Close connection
 }
 
 
 void setup() {
-  // iniciar monitor serial
+  // start serial monitor
   Serial.begin(115200);
-  delay(1500); // pequeno atraso para inicializar
+  delay(1500);  // short delay to start up
 
-  // calibrar sensor
+  // Prepares the sensor
   setupSensor();
 
-  // Conectando ao Wi-Fi
+  // Connect to Wi-Fi
   connectWiFi();
 }
 
 
 void loop() {
-  // Ciclo de 60s com 3.3V (aquecimento)
-  Serial.println("Iniciando aquecimento alto (3.3V)...");
-  analogWrite(SENSOR_PWM_PIN, 255);
-  delay(HEATING_HIGH_DURATION);
 
-  // Ciclo de 90s com 1.4V (medição)
-  Serial.println("Reduzindo para baixa tensão (1.4V)...");
-  analogWrite(SENSOR_PWM_PIN, 20);
-  delay(HEATING_LOW_DURATION);
+  // Reads the sensor
+  MQ7.update();                  // Updates ADC reading
+  float ppm = MQ7.readSensor();  // reads estimated CO in PPM
 
-  // Leitura do sensor
-  MQ7.update();
-  float ppm = MQ7.readSensor();
+  Serial.print("CO estimado: ");
+  Serial.print(CO_ppm);
+  Serial.println(" ppm");
 
 
-  // envio da requisicao
+  // submit the request
   String requestBody = prepareRequestBody(ppm);
 
   if (WiFi.status() != WL_CONNECTED) {
@@ -168,7 +148,7 @@ void loop() {
   sendRequest(requestBody);
 
 
-  // Espera 7min30s antes de repetir para completar ciclo de 10 minutos
-  Serial.println("Aguardando 7min30s antes do próximo ciclo...");
-  delay(CYCLE_WAIT_DURATION);
+  // Wait 10 minutes to send the next reading
+  Serial.println("Aguardando 10min antes do próximo ciclo...");
+  delay(600000);
 }
