@@ -1,7 +1,9 @@
 import json
 import boto3
+from datetime import datetime
 import os
 
+# prepares sqs
 sqs = boto3.client('sqs')
 
 def get_event_data(event):
@@ -19,7 +21,8 @@ def get_event_data(event):
 
 def get_ppm_message(event_data: dict, co_recommentations: dict) -> str:
     # define initial message info
-    new_message = f"Média mais recente: {int(event_data['average_measurement'])} ppm\nData: {event_data['reading_date_hour'][:10]} | Hora: {event_data['reading_date_hour'][11:]}:00\n"
+    data_obj = datetime.strptime(event_data['reading_date_hour'][:10], '%Y-%m-%d')
+    new_message = f"Média mais recente: {int(event_data['average_measurement'])} ppm\nData: {data_obj.strftime("%d/%m/%Y")} | Hora: {event_data['reading_date_hour'][11:]}:00\n"
 
     # run through ppm messages
     for range in co_recommentations["ranges"]:
@@ -59,12 +62,12 @@ def get_sqs_messages(sqs_queue_url: str):
 def get_new_message_list(sqs_messages: list, new_message: str) -> list:
     new_message_list = []
 
-    # pega a lista com mensagens anteriores se tiver e poe na nova lista
+    # get the list with previous messages if there are any and put them in the new list
     for old_message in sqs_messages:
         new_message_list.append(old_message)
             
 
-    # adiciona a nova mensagem
+    # add the new message
     new_message_list.append(new_message)
 
     return new_message_list
@@ -106,7 +109,7 @@ def lambda_handler(event, context):
         channel_messages = get_new_message_list(sqs_messages, new_message)
         print(f"Nova mensagens para o canal: {channel_messages}")
 
-        # chama a funcao lambda para mandar mensagens
+        # calls the Lambda function to send the messages
         lambda_function_name = os.environ["LAMBDA_FUNCTION_NAME"]
 
         response = call_lambda_function(event_data["reading_region"], channel_messages, lambda_function_name)

@@ -23,50 +23,56 @@ def get_region_data(reading_region: str):
 
 def handle_messages(channel_messages: list, region_data: dict):
 
-    # esse valor serve para ajudar a retornar as mensagens nao enviadas
-    sended_messages_index = 0
+    # this value works as a index to control unsent messages
+    sent_messages_index = 0
 
     for message_dict in channel_messages:
-        message_sended = send_message(message_dict["message_text"], region_data["channel_id"], region_data["bot_token"])
+        message_sent = send_message(message_dict, region_data["channel_id"], region_data["bot_token"])
 
-        if message_sended:
-            sended_messages_index += 1
+        if message_sent:
+            sent_messages_index += 1
             print(f"Mensagem enviada: {message_dict['message_text']}")
         
         else:
             print("Falha ao enviar as mensagens!")
             break
 
-    return channel_messages[sended_messages_index:]
+    return channel_messages[sent_messages_index:]
 
 
-def send_message(message: str, channel_id: str, bot_token:str):
-    # prepara o payload com a mensagem para enviar
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {"chat_id": channel_id, "text": message}
+def send_message(message_dict: dict, channel_id: str, bot_token:str):
+    # prepares the payload with the message to send
+    url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+    photo_url = f"{os.environ['BOT_IMAGES_URL']}{message_dict['air_quality']}.png"
+    payload = {
+        "chat_id": channel_id, 
+        "photo": photo_url, 
+        "caption": message_dict["message_text"],
+        "parse_mode": "HTML"}
+    
 
-    # envia a mensagem
+    # tries to send the message
     result = requests.post(url=url, data=payload)
 
-    sended_message = False
+    sent_message = False
     if result.status_code == 200:
-        sended_message = True
+        sent_message = True
     else:
         print(f"Falha ao enviar a mensagem: {result.text}")
-        sended_message = False
+        sent_message = False
 
-    return sended_message
+    return sent_message
 
 
-def update_sqs_queue(not_sended_messages:list, region_data: dict):
+def update_sqs_queue(not_sent_messages:list, region_data: dict):
     sqs_client = boto3.client("sqs")
 
-    # caso hajam mensagens nao enviadas, envia a lista com elas para a fila novamente
-    if len(not_sended_messages) > 0:
+    # if there are unsent messages, send the list with them to the queue
+    if len(not_sent_messages) > 0:
         print("Devolvendo mensagens para o SQS")
         response = sqs_client.send_message(
             QueueUrl=region_data["sqs_queue_url"],
-            MessageBody=json.dumps(not_sended_messages),
+            MessageBody=json.dumps(not_sent_messages),
             MessageGroupId="channel_messages",
         )
 
@@ -78,18 +84,17 @@ def lambda_handler(event, context):
         event_data = get_event_data(event)
         print(f"Event data: {event_data}")
 
-        # pega os dados corretamente de acordo com a regiao
+        # retrieves the data correctly according to the region
         region_data = get_region_data(event_data["reading_region"])
         print(f"Region data: {region_data}")
 
-        # tenta enviar as mensagens pro canal do telegram
-        not_sended_messages = handle_messages(event_data["channel_messages"], region_data)
-        print(f"Mensagens nao enviadas: {not_sended_messages}")
+        # try sending the messages to the Telegram channel
+        not_sent_messages = handle_messages(event_data["channel_messages"], region_data)
+        print(f"Mensagens nao enviadas: {not_sent_messages}")
 
-        # lida com as mensagens que nao foram enviadas
-        update_sqs_queue(not_sended_messages, region_data)
+        # handles messages that were not sent
+        update_sqs_queue(not_sent_messages, region_data)
 
-        # sucess return
         return {
             'statusCode': 200,
             'body': json.dumps(f"MENSAGENS ENVIADAS!")

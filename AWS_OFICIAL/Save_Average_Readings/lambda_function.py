@@ -6,11 +6,11 @@ from boto3.dynamodb.conditions import Key
 import boto3
 import uuid
 
-# variaveis de ambiente
+# environment variables
 NEWER_READINGS_TABLE = os.environ["NEWER_READINGS_TABLE"]
 AVERAGE_READINGS_TABLE = os.environ["AVERAGE_READINGS_TABLE"]
 
-# prepara o dynamodb
+# prepares dynamodb
 dynamodb = boto3.client("dynamodb")
 
 
@@ -25,14 +25,14 @@ def get_query_parameters(event):
 
 
 def get_date_hour(timezone: str):
-    # pega a hora correta de acordo com o timezone
+    # get the correct time according to the time zone
     zi = ZoneInfo(timezone)
     aware_datetime = datetime.now(zi)
 
-    # subtrai uma hora, uma vez que as leituras foram feitas ao longo da hora anterior
+    # subtract one hour, since the readings were taken over the previous hour
     aware_datetime = aware_datetime - timedelta(hours=1)
 
-    # prepare date and hour - date formatting: Year-month-day | hour formatting: Hour 00-23
+    # format the date and time — date formatting: Year-month-day | hour formatting: Hour 00-23
     reading_date = aware_datetime.strftime("%Y-%m-%d")
     reading_hour = aware_datetime.strftime("%H")
 
@@ -56,7 +56,7 @@ def get_newer_readings(query_parameters: dict):
 
 def calculate_average(newer_readings: list):
     
-    # caso nao tenha nenhuma leitura ele retorna um erro
+    # if there is no reading, it returns an error
     if newer_readings == []:
         raise Exception("No readings found")
 
@@ -90,19 +90,19 @@ def persist_average_reading_item(new_item: dict):
 
 def lambda_handler(event, context):
     try:
-        # primeiro pega os dados necessarios para a consulta (regiao, data e hora)
+        # first, retrieve the data needed for the query (region, date, and time)
         query_parameters = get_query_parameters(event)
 
-        # consulta as leituras correspondentes
+        # query the corresponding readings
         newer_readings = get_newer_readings(query_parameters)
 
         # calcula a media
         average_measurement = calculate_average(newer_readings)
 
-        # gera o novo item
+        # generate the new item
         new_item = generate_new_item(query_parameters, average_measurement)
 
-        # salva na tabela de medias
+        # save in the averages table
         persist_average_reading_item(new_item)
 
         return {

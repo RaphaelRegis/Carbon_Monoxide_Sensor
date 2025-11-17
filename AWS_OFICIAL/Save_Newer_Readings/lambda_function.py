@@ -33,8 +33,6 @@ def generate_new_item(event_body, date_hour):
         "reading_region": {"S": event_body["region"]},
         "reading_date_hour": {"S": f"{date_hour["date"]} {date_hour["hour"]}"},
         "measurement": {"S": str(float(event_body["measurement"]).__ceil__())}, # the measurement is rounded up and then converted to a string
-        # "date": {"S": date_hour["date"]},
-        # "hour": {"S": date_hour["hour"]}
     }
 
 
@@ -49,22 +47,22 @@ def persist_new_item(new_item):
 def lambda_handler(event, context):
 
     try:
-        # coletar corpo da requisicao
+        # collect request body
         event_body = get_event_body(event)
 
-        # preparar data e hora
+        # prepares correct date and hour based on timezone
         date_hour = get_date_hour(event_body["timezone"])
 
-        # gerar novo item
+        # creates the new object
         new_item = generate_new_item(event_body, date_hour)
         
-        # salvar novo item no dynamodb
+        # save the new object into dynamodb
         persist_new_item(new_item)
 
         # request return
         return {
             'statusCode': 201,
-            'body': json.dumps("new_item")
+            'body': json.dumps(new_item)
         }
 
     except Exception as e:
