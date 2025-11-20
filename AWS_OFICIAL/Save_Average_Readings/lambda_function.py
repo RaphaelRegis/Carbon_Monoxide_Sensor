@@ -96,7 +96,7 @@ def lambda_handler(event, context):
         # query the corresponding readings
         newer_readings = get_newer_readings(query_parameters)
 
-        # calcula a media
+        # calculate the average
         average_measurement = calculate_average(newer_readings)
 
         # generate the new item
