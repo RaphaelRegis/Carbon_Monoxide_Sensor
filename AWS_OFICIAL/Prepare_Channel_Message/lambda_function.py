@@ -101,7 +101,7 @@ def lambda_handler(event, context):
         # get sqs_queue_url
         sqs_queue_url = os.environ[f"{event_data["reading_region"].upper()}_SQS_QUEUE_URL"]
 
-        # procura outras mensagens no sqs
+        # search for other messages in sqs
         sqs_messages = get_sqs_messages(sqs_queue_url)
         print(f"Mensagens anteriores: {sqs_messages}")
 
