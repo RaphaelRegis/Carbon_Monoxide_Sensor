@@ -29,10 +29,10 @@ A função Notify_Message_Channel_Function constitui a etapa final do fluxo de n
 
 ## 📡 Esquema do Hardware
 
-![Esquema do hardware](assets\04-Esquema_hardware.png)
+![Esquema do hardware](https://github.com/RaphaelRegis/Carbon_Monoxide_Sensor/blob/main/assets/04-Esquema_hardware.png)
 
 ---
 
 ## 🗂️ Esquema Completo da Aplicação
 
-![AEsquema da aplicação](assets\06-Esquema_sistema.png)
+![Esquema da aplicação](https://github.com/RaphaelRegis/Carbon_Monoxide_Sensor/blob/main/assets/06-Esquema_sistema.png)
